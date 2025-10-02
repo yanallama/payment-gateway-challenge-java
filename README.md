@@ -14,13 +14,21 @@ docker compose up -d
 ./gradlew bootRun
 # Optional override
 ./gradlew bootRun --args='--bank.url=http://localhost:8080/payments'
-open http://localhost:8090/swagger-ui/index.html
 ```
+Open Swagger UI at `http://localhost:8090/swagger-ui/index.html` to explore the API.
 
 `bank.url` property override for folks running the simulator on another host:
 ```text
 java -Dbank.url=http://localhost:8080/payments -jar ...
 ```
+
+## Build & Test
+
+```bash
+./gradlew clean build   # build + run all tests
+./gradlew test          # run tests only
+```
+
 ### Example POST:
 #### 1) Happy-path POST
 ```bash
@@ -63,6 +71,7 @@ curl -X POST http://localhost:8090/api/payment \
 ```json
 {"id":"2935d238-248b-4e97-ac49-829f293fc7b9","status":"Declined","cardNumberLastFour":1112,"expiryMonth":12,"expiryYear":2027,"currency":"GBP","amount":1200}
 ```
+
 3) Bank unavailable path
 
 Use last digit 0 (PAN ends with 0) → 502 Bad Gateway:
@@ -127,16 +136,17 @@ curl -X GET http://localhost:8090/api/payment/99b6bf60-7695-440b-802d-2873132d57
 
 
 ## Design Notes
-- Validation rules, masking, bank mapping, error codes, didn’t modify imposters/ or .editorconfig.
+- Validation rules, masking, bank mapping, error codes.
 - Avoid logging sensitive fields (never PAN/CVV)
 - Currency is validated against an allow-list of three ISO-4217 codes (GBP, EUR, USD). Other codes are rejected with a 400 Bad Request. This keeps the scope simple while demonstrating validation logic.
+- I left imposters/ and .editorconfig unchanged from the starter repo.
 - The spec mentions “Rejected” as a payment outcome. In this implementation, invalid requests are rejected with HTTP 400 and an error payload instead of returning a PaymentResponse with status:"Rejected". I chose REST-friendly semantics and did not persist failed validations.
 
 ### Status mapping
 
-| Condition                                         | Status      | Notes                                                                 |
-|---------------------------------------------------|-------------|----------------------------------------------------------------------|
-| All request fields valid, bank returns `authorized: true`  | Authorized  | Payment accepted by acquiring bank. Auth code stored (not exposed). |
-| All request fields valid, bank returns `authorized: false` | Declined    | Payment declined by acquiring bank.                                 |
+| Condition                                         | Status                             | Notes                                                                 |
+|---------------------------------------------------|------------------------------------|----------------------------------------------------------------------|
+| All request fields valid, bank returns `authorized: true`  | Authorized                         | Payment accepted by acquiring bank. Auth code stored (not exposed). |
+| All request fields valid, bank returns `authorized: false` | Declined                           | Payment declined by acquiring bank.                                 |
 | All request fields valid, bank returns `503` (card ends in 0) | Error → surfaced as 502 Bad Gateway | Bank unavailable; not persisted as a payment. |
-| Request validation fails (bad PAN length, expired card, unsupported currency, CVV invalid, amount ≤ 0) |  Rejected (HTTP 400) | Gateway rejects request without calling the bank; not persisted. |
+| Request validation fails (bad PAN length, expired card, unsupported currency, CVV invalid, amount ≤ 0) | 400 Bad Request (validation error)   | Gateway rejects request without calling the bank; not persisted. |
