@@ -71,12 +71,13 @@ public class PaymentResponse {
 
   @Override
   public String toString() {
-    // Safe for debug logs only; intentionally omits PAN, CVV, and expiry details
     return "PaymentResponse{" +
         "id=" + id +
         ", status=" + status +
-        ", last4=" + cardNumberLastFour +
+        ", card=****" + String.format("%04d", cardNumberLastFour) +
+        ", expiry=" + String.format("%02d/%02d", expiryMonth, (expiryYear % 100)) +
         ", currency='" + currency + '\'' +
+        ", amount=" + amount +
         '}';
   }
 }
