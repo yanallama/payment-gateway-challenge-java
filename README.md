@@ -12,6 +12,8 @@ Run order:
 ```bash
 docker compose up -d
 ./gradlew bootRun
+# Optional override
+./gradlew bootRun --args='--bank.url=http://localhost:8080/payments'
 open http://localhost:8090/swagger-ui/index.html
 ```
 
@@ -99,7 +101,7 @@ curl -X POST http://localhost:8090/api/payment \
   }' -i
 ```
 
-#### Response: Rejected (validation error → 400 Bad Request)
+#### Response: 400 Bad Request (validation error)
 - when the gateway rejects invalid input before calling the bank, e.g. bad PAN length, expired card, unsupported currency, etc.
 - Expected: 400 Bad Request with an ErrorResponse message
 - First reason given when there are multiple reasons

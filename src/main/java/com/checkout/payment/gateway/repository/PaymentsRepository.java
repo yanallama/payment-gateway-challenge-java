@@ -18,4 +18,8 @@ public class PaymentsRepository {
   public Optional<PaymentResponse> get(UUID id) {
     return Optional.ofNullable(payments.get(id));
   }
+
+  public int size() {
+    return payments.size();
+  }
 }

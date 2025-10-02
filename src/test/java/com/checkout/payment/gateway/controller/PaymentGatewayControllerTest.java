@@ -22,6 +22,8 @@ import org.springframework.test.web.servlet.MockMvc;
 
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+
 @SpringBootTest
 @AutoConfigureMockMvc
 class PaymentGatewayControllerTest {
@@ -120,6 +122,8 @@ class PaymentGatewayControllerTest {
     when(bankClient.authorize(anyString(), anyInt(), anyInt(), anyString(), anyInt(), anyString()))
         .thenThrow(new com.checkout.payment.gateway.exception.BankUnavailableException("Bank down"));
 
+    int before = paymentsRepository.size();
+
     var json = """
       {
         "card_number":"4111111111111110",
@@ -136,6 +140,8 @@ class PaymentGatewayControllerTest {
             .content(json))
         .andExpect(status().isBadGateway())
         .andExpect(jsonPath("$.message").value("Bank temporarily unavailable"));
+
+    assertEquals(before, paymentsRepository.size());
   }
 
   @Test
